@@ -21,16 +21,17 @@ namespace EventControl.API.Data
         public async Task CheckTickets()
         {
             List<EventTicket> Tickets = new List<EventTicket>();
-
-            for (int i = 1; i <= 50000; i++)
-            {  
+            //if (!EventTicket.Any())
+            {
+                for (int i = 1; i <= 5; i++)
+                {  
                 Tickets.Add(new EventTicket { UsedDate = null, Used = false, Location = null });
-            }
+                }
             _context.eventTickets.AddRange(Tickets);
             await _context.SaveChangesAsync();
+            }
         }
 
-        
-}
+    }
 }
 

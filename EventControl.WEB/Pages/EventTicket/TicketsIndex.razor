@@ -1,14 +1,11 @@
-﻿@page "/tickets"
-@using CurrieTechnologies.Razor.SweetAlert2;
-@using EventControl.WEB.Repositories;
-@using EventControl.Shared.Entities;
-
+﻿@page "/eventTickets"
+@using Blazored.Modal.Services;
+@using Blazored.Modal;
 @inject IRepository repository
 @inject NavigationManager navigationManager
 @inject SweetAlertService sweetAlertService
 
-
-@if (Tickets is null)
+@if (Events is null)
 {
     <div class="spinner" />
 }
@@ -16,15 +13,15 @@ else
 {
     <div class="card">
         <div class="card-header">
-           @* <span>
-                <i class="oi oi-globe"></i> ACCESO
-                <a class="btn btn-sm btn-primary float-end" href="/tickets/edit/@ticket.Id"<i class="oi oi-plus"></i> Adicionar País</a>
-            </span>*@
+            <span>
+                <i class="oi oi-briefcase"></i> Eventos Atanasio Girardot
+@*                <a class="btn btn-sm btn-primary float-end" @onclick=@(() => ShowModal())><i class="oi oi-briefcase"></i> Adicionar Campañía</a>
+*@            </span>
         </div>
         <div class="card-body">
             <div class="mb-2" style="display: flex; flex-wrap:wrap; align-items: center;">
                 <div>
-                    <input style="width: 400px;" type="text" class="form-control" id="titulo" placeholder="Buscar Tikect..." @bind-value="Filter" />
+                    <input style="width: 400px;" type="text" class="form-control" id="titulo" placeholder="Buscar Boleta..." @bind-value="Filter" />
                 </div>
                 <div class="mx-1">
                     <button type="button" class="btn btn-outline-primary" @onclick="ApplyFilterAsync"><i class="oi oi-layers" /> Filtrar</button>
@@ -36,24 +33,39 @@ else
                     TotalPages="totalPages"
                     SelectedPage="SelectedPageAsync" />
 
-            <GenericList MyList="Tickets">
+            <GenericList MyList="Events">
                 <Body>
                     <table class="table table-striped">
                         <thead>
                             <tr>
-                                <th>Acceso</th>
-                                <th style="width:220px">Validacion de Tickets</th>
+                                @* <th>Control de Eventos</th>*@
+                                <th style="width:220px">Id Boleta</th>
+                                <th style="width:220px">Fecha de Uso</th>
+                                <th style="width:220px">Fue Usada</th>
+                                <th style="width:220px">Porteria</th>
                                 <th style="width:260px"></th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var ticket in Tickets!)
+                            @foreach (var events in Events!)
                             {
                                 <tr>
                                     <td>
-                                        @ticket.Id
+                                        @events.Id
                                     </td>
-                                    
+                                    <td>
+                                        @events.UsedDate
+                                    </td>
+                                    <td>
+                                        @events.Used
+                                    </td>
+                                    <td>
+                                        @events.Location
+                                    </td>
+                                    <td>
+
+                                        <a @onclick=@(() => ShowModal(events.Id, true)) class="btn btn-warning btn-sm"><i class="oi oi-pencil" /> Editar</a>
+                                    </td>
                                 </tr>
                             }
                         </tbody>
@@ -62,32 +74,29 @@ else
             </GenericList>
         </div>
     </div>
-}
 
-@code {
+    @code {
     private int currentPage = 1;
     private int totalPages;
 
-    public List<EventTicket>? Tickets { get; set; }
+    public List<EventTicket>? Events { get; set; }
 
     [Parameter]
     [SupplyParameterFromQuery]
     public string Page { get; set; } = string.Empty;
 
+    [CascadingParameter]
+    IModalService Modal { get; set; } = default!;
+
+
     [Parameter]
     [SupplyParameterFromQuery]
     public string Filter { get; set; } = string.Empty;
-
-    //[CascadingParameter]
-    //IModalService Modal { get; set; } = default!;
-
 
     protected override async Task OnInitializedAsync()
     {
         await LoadAsync();
     }
-
-    
 
     private async Task LoadAsync(int page = 1)
     {
@@ -101,20 +110,20 @@ else
 
         if (string.IsNullOrEmpty(Filter))
         {
-            url1 = $"api/tickets?page={page}";
-            url2 = $"api/tickets/totalPages";
+            url1 = $"api/eventTickets?page={page}";
+            url2 = $"api/eventTickets/totalPages";
         }
         else
         {
-            url1 = $"api/tickets?page={page}&filter={Filter}";
-            url2 = $"api/tickets/totalPages?filter={Filter}";
+            url1 = $"api/eventTickets?page={page}&filter={Filter}";
+            url2 = $"api/eventTickets/totalPages?filter={Filter}";
         }
 
         try
         {
             var responseHppt = await repository.Get<List<EventTicket>>(url1);
             var responseHppt2 = await repository.Get<int>(url2);
-            Tickets = responseHppt.Response!;
+            Events = responseHppt.Response!;
             totalPages = responseHppt2.Response!;
         }
         catch (Exception ex)
@@ -129,7 +138,7 @@ else
         await LoadAsync(page);
     }
 
-   
+    
 
     private async Task CleanFilterAsync()
     {
@@ -144,6 +153,28 @@ else
         await SelectedPageAsync(page);
     }
 
+    private async Task ShowModal(int id = 0, bool isEdit = false)
+    {
+        IModalReference modalReference;
+
+        if (isEdit)
+        {
+            //modalReference = Modal.Show<CompanyEdit>(string.Empty, new ModalParameters().Add("Id", id));
+        }
+        else
+        {
+            //modalReference = Modal.Show<CompanyCreate>();
+        }
+
+        //var result = await modalReference.Result;
+        //if (result.Confirmed)
+        //{
+        //    await LoadAsync();
+        //}
+    }
+
+
+  }
 
 
 }
