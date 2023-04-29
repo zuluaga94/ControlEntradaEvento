@@ -1,0 +1,68 @@
+﻿@page "/eventTicket/edit/{Id:int}"
+@using Blazored.Modal.Services;
+@using System.Net;
+@using Blazored.Modal;
+@inject IRepository repository
+@inject NavigationManager navigationManager
+@inject SweetAlertService sweetAlertService
+
+<h3>Editar Boletas</h3>
+
+@if (eventTicket is null)
+{
+    <div class="spinner" />
+}
+else
+{
+    <TicketsForm @ref="eventForm" EventTicket="eventTicket" OnValidSubmit="EditAsync" ReturnAction="Return" />
+}
+
+@code {
+    private EventTicket? eventTicket;
+    private TicketsForm? eventForm;
+
+    [Parameter]
+    public int Id { get; set; }
+
+    [CascadingParameter]
+    BlazoredModalInstance BlazoredModal { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var responseHttp = await repository.Get<EventTicket>($"/api/eventsControl/{Id}");
+        if (responseHttp.Error)
+        {
+            if (responseHttp.HttpResponseMessage.StatusCode == HttpStatusCode.NotFound)
+            {
+                navigationManager.NavigateTo("/eventsControl");
+                return;
+            }
+
+            var message = await responseHttp.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
+            return;
+        }
+
+        eventTicket = responseHttp.Response;
+    }
+
+
+    private async Task EditAsync()
+    {
+        var responseHttp = await repository.Put("/api/eventTickets", eventTicket);
+        if (responseHttp.Error)
+        {
+            var message = await responseHttp.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
+            return;
+        }
+        await BlazoredModal.CloseAsync(ModalResult.Ok());
+        Return();
+    }
+
+    private void Return()
+    {
+        eventForm!.FormPostedSuccessfully = true;
+        navigationManager.NavigateTo("/eventTickets");
+    }
+}

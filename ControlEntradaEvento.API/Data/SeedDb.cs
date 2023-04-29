@@ -23,7 +23,7 @@ namespace EventControl.API.Data
             List<EventTicket> Tickets = new List<EventTicket>();
             //if (!EventTicket.Any())
             {
-                for (int i = 1; i <= 5; i++)
+                for (int i = 1; i <= 50000; i++)
                 {  
                 Tickets.Add(new EventTicket { UsedDate = null, Used = false, Location = null });
                 }

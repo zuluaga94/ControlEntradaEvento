@@ -1,20 +1,70 @@
-﻿
+﻿@using EventControl.Shared.Enums;
 @inject SweetAlertService sweetAlertService
 
 <NavigationLock OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
 
 <EditForm EditContext="editContext" OnValidSubmit="OnValidSubmit">
     <DataAnnotationsValidator />
-    <div class="mb-3">
-        <label>Eventos Atanasio Girardot: </label>
-        <div>
-            <InputNumber class="form-control" @bind-Value="@EventTicket.Id" />
-            <ValidationMessage For="@(() =>EventTicket.Id)" />
+
+    <div class="content">
+
+        <div class="card-body">
+            <div class="row">
+
+
+                <div class="col-6">
+                    <div class="mb-3">
+                        <label>Eventos Atanasio Girardot:</label>
+                        <div>
+                            <InputNumber class="form-control" @bind-Value="@EventTicket.Id" />
+                            <ValidationMessage For="@(() => EventTicket.Id)" />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Es Usada:</label>
+                        <div>
+                            <InputCheckbox class="form-control" @bind-Value="@EventTicket.Used" />
+                            <ValidationMessage For="@(() => EventTicket.Used)" />
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="col-6">
+                    <div class="mb-3">
+                        <label>Fecha de Uso:</label>
+                        <div>
+                            <InputDate class="form-control" @bind-Value="@EventTicket.UsedDate" />
+                            <ValidationMessage For="@(() => EventTicket.UsedDate)" />
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="mb-3">
+                    <label>Ubicacion :</label>
+                    <div>
+                        <InputSelect class="form-select" @bind-Value="EventTicket.Location">
+                            @foreach (var gatesType in Enum.GetValues(typeof(GatesType)))
+                            {
+                                <option value="@gatesType">@(gatesType.ToString())</option>
+                            }
+
+
+                        </InputSelect>
+                    </div>
+                </div>
+
+
+            </div>
         </div>
     </div>
     <button class="btn btn-primary" type="submit">Guardar Cambios</button>
     <button class="btn btn-success" @onclick="ReturnAction">Regresar</button>
 </EditForm>
+
+
 
 @code {
     private EditContext editContext = null!;

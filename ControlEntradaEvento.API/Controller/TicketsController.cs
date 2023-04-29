@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 namespace EventControl.API.Controller
 {
     [ApiController]
-    [Route("/api/eventTickets")]
+    [Route("/api/eventTicket")]
     public class TicketsController : ControllerBase
     {
 

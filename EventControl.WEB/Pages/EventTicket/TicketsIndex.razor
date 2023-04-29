@@ -1,6 +1,7 @@
-﻿@page "/eventTickets"
+﻿@page "/eventTicket"
 @using Blazored.Modal.Services;
 @using Blazored.Modal;
+@using System.Net;
 @inject IRepository repository
 @inject NavigationManager navigationManager
 @inject SweetAlertService sweetAlertService
@@ -14,9 +15,9 @@ else
     <div class="card">
         <div class="card-header">
             <span>
-                <i class="oi oi-briefcase"></i> Eventos Atanasio Girardot
-@*                <a class="btn btn-sm btn-primary float-end" @onclick=@(() => ShowModal())><i class="oi oi-briefcase"></i> Adicionar Campañía</a>
-*@            </span>
+                <i class="oi oi-briefcase"></i> Eventos
+                <a class="btn btn-sm btn-primary float-end" @onclick=@(() => ShowModal())><i class="oi oi-briefcase"></i> Adicionar Campañía</a>
+            </span>
         </div>
         <div class="card-body">
             <div class="mb-2" style="display: flex; flex-wrap:wrap; align-items: center;">
@@ -64,7 +65,7 @@ else
                                     </td>
                                     <td>
 
-                                        <a @onclick=@(() => ShowModal(events.Id, true)) class="btn btn-warning btn-sm"><i class="oi oi-pencil" /> Editar</a>
+                                        <a href="/systemControl/edit/@events.Id" class="btn btn-warning"><i class="oi oi-pencil" /> Editar</a>
                                     </td>
                                 </tr>
                             }
@@ -110,13 +111,13 @@ else
 
         if (string.IsNullOrEmpty(Filter))
         {
-            url1 = $"api/eventTickets?page={page}";
-            url2 = $"api/eventTickets/totalPages";
+            url1 = $"api/eventTicket?page={page}";
+            url2 = $"api/eventTicket/totalPages";
         }
         else
         {
-            url1 = $"api/eventTickets?page={page}&filter={Filter}";
-            url2 = $"api/eventTickets/totalPages?filter={Filter}";
+            url1 = $"api/eventTicket?page={page}&filter={Filter}";
+            url2 = $"api/eventTicket/totalPages?filter={Filter}";
         }
 
         try
@@ -124,6 +125,10 @@ else
             var responseHppt = await repository.Get<List<EventTicket>>(url1);
             var responseHppt2 = await repository.Get<int>(url2);
             Events = responseHppt.Response!;
+            if (Events.Count == 0)
+            {
+                ShowMessageAsync();
+            }
             totalPages = responseHppt2.Response!;
         }
         catch (Exception ex)
@@ -132,13 +137,58 @@ else
         }
     }
 
+    private async Task ShowMessageAsync()
+    {
+        var result = await sweetAlertService.FireAsync(new SweetAlertOptions
+            {
+                Title = "Confirmación",
+                Text = "La boleta no válida",
+                Icon = SweetAlertIcon.Question,
+                ShowCancelButton = false,
+            });
+
+        return;
+    }
+
+
+
     private async Task SelectedPageAsync(int page)
     {
         currentPage = page;
         await LoadAsync(page);
     }
 
-    
+    private async Task DeleteAsync(int id)
+    {
+        var result = await sweetAlertService.FireAsync(new SweetAlertOptions
+            {
+                Title = "Confirmación",
+                Text = "¿Realmente deseas eliminar el registro?",
+                Icon = SweetAlertIcon.Question,
+                ShowCancelButton = true,
+                CancelButtonText = "No",
+                ConfirmButtonText = "Si"
+            });
+
+        var confirm = string.IsNullOrEmpty(result.Value);
+        if (confirm)
+        {
+            return;
+        }
+
+        var responseHttp = await repository.Delete($"/api/eventTicket/{id}");
+        if (responseHttp.Error)
+        {
+            if (responseHttp.HttpResponseMessage.StatusCode != HttpStatusCode.NotFound)
+            {
+                var message = await responseHttp.GetErrorMessageAsync();
+                await sweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
+                return;
+            }
+        }
+
+        await LoadAsync();
+    }
 
     private async Task CleanFilterAsync()
     {
@@ -159,19 +209,21 @@ else
 
         if (isEdit)
         {
-            //modalReference = Modal.Show<CompanyEdit>(string.Empty, new ModalParameters().Add("Id", id));
+            modalReference = Modal.Show<TicketsEdit>(string.Empty, new ModalParameters().Add("Id", id));
         }
         else
         {
-            //modalReference = Modal.Show<CompanyCreate>();
+            modalReference = Modal.Show<TicketsEdit>();
         }
 
-        //var result = await modalReference.Result;
-        //if (result.Confirmed)
-        //{
-        //    await LoadAsync();
-        //}
+        var result = await modalReference.Result;
+        if (result.Confirmed)
+        {
+            await LoadAsync();
+        }
     }
+
+
 
 
   }
